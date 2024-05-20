@@ -1,0 +1,7 @@
+.properties
+.idea/**
+__pycache__/
+image.py
+grabber.py
+gitcrawler.py
+config.properties
