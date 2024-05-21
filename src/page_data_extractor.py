@@ -1,5 +1,4 @@
-from urllib.parse import urlparse, urljoin
-
+import src.helper as helper
 
 class PageDataExtractor:
     def __init__(self, soup, url):
@@ -15,8 +14,8 @@ class PageDataExtractor:
             'word_count': self.extract_word_count(),
             'image_count': len(self.soup.find_all('img')),
             'page_structure': self.extract_page_structure(),
-            'external_links': self.extract_external_links(),
-            'internal_links': self.extract_internal_links()
+            'external_links': len(helper.extract_external_links(self.soup, self.url)),
+            'internal_links': len(helper.extract_internal_links(self.soup, self.url))
         }
         
     def extract_meta_description(self):
@@ -34,26 +33,6 @@ class PageDataExtractor:
             'tables': len(self.soup.find_all('table'))
         }
         return structure
-
-    def extract_internal_links(self):
-        domain = urlparse(self.url).netloc
-        internal_links = []
-        for link in self.soup.find_all('a', href=True):
-            href = link['href']
-            if href.startswith('/'):
-                internal_links.append(urljoin(self.url, href))
-            elif domain in urlparse(href).netloc:
-                internal_links.append(href)
-        return len(internal_links)
-
-    def extract_external_links(self):
-        domain = urlparse(self.url).netloc
-        external_links = []
-        for link in self.soup.find_all('a', href=True):
-            href = link['href']
-            if not href.startswith('/') and domain not in urlparse(href).netloc:
-                external_links.append(href)
-        return len(external_links)
 
     def extract_word_count(self):
         content = ' '.join([p.get_text() for p in self.soup.find_all('p')])

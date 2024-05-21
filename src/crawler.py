@@ -6,6 +6,7 @@ import configparser
 from src.image_data_extractor import ImageDataExtractor
 from src.page_data_extractor import PageDataExtractor
 import requests
+import src.helper as helper
 
 config = configparser.ConfigParser()
 config.read("../config.properties")
@@ -15,21 +16,42 @@ class Crawler:
     def __init__(self):
         self.db = Database(host=config['database']['db.host'], username=config['database']['db.username'],
                            password=config['database']['db.password'], database=config['database']['db.database'])
+        self.visited_urls = set()
+        self.to_visit = []
 
     def crawl(self, url):
-        response = requests.get(url)
-        if response.status_code != 200:
-            print(f"Error: get {response.status_code} as response for {url}")
-            return
         sitemap_pages = self.get_sitemap_pages(url)
-        if sitemap_pages is not None:
+        if sitemap_pages:
+            print("Crawling website through sitemap...")
             for page in sitemap_pages:
-                print(page)
-                soup = self.fetch_url(page)
-                self.crawl_pages(soup, urls=url)
-                self.crawl_images(soup, url)
+                self.visit_url(page)
         else:
-            print(f'No sitemap found for {url}')
+            print(f'No sitemap found for {url}. Crawling internal links...')
+            self.to_visit.append(url)
+            while self.to_visit:
+                next_url = self.to_visit.pop(0)
+                if next_url not in self.visited_urls:
+                    self.visit_url(next_url)
+
+    def visit_url(self, url):
+        if url in self.visited_urls:
+            return
+        print(f"Visiting: {url}")
+        self.visited_urls.add(url)
+        try:
+            soup = self.fetch_url(url)
+        except HTTPError as err:
+            print(f"Error: {err} for URL: {url}")
+            return
+
+        # TODO save page only if it contains images
+        self.crawl_pages(soup, url)
+        self.crawl_images(soup, url)
+
+        internal_links = helper.extract_internal_links(soup, url)
+        for link in internal_links:
+            if link not in self.visited_urls and link not in self.to_visit:
+                self.to_visit.append(link)
 
     def crawl_pages(self, soup, urls):
         page_data_extractor = PageDataExtractor(soup, urls)
@@ -45,6 +67,13 @@ class Crawler:
         print(data)
         print(len(data))
 
+    def fetch_url(self, url, xml=False):
+        response = requests.get(url)
+        response.raise_for_status()
+        if xml:
+            return BeautifulSoup(response.content, features='xml')
+        return BeautifulSoup(response.content, features='html.parser')
+
     def parse_sitemap(self, soup):
         urls = []
         if soup.find('sitemapindex'):
@@ -55,13 +84,6 @@ class Crawler:
         elif soup.find('urlset'):
             urls = [url.find('loc').text for url in soup.find_all('url')]
         return urls
-
-    def fetch_url(self, url, xml=False):
-        response = requests.get(url)
-        response.raise_for_status()
-        if xml:
-            return BeautifulSoup(response.content, features='xml')
-        return BeautifulSoup(response.content, features='html.parser')
 
     def get_sitemap_pages(self, url):
         sitemap_url = urljoin(url, '/sitemap.xml')
