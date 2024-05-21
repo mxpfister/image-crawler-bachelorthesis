@@ -28,6 +28,8 @@ class ImageDataExtractor:
             height = image.get('height', 0)
             image_response = self.get_image_response(src)
             content_type = image_response.headers.get('Content-Type', '')
+            if "image" not in content_type or image_response.status_code != 200:
+                continue
             if 'image/svg+xml' in content_type:
                 image_format = 'SVG'
                 image_size = len(image_response.content)
