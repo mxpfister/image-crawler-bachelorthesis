@@ -51,20 +51,22 @@ class Crawler:
             sitemaps = soup.find_all('sitemap')
             for sitemap in sitemaps:
                 sitemap_url = sitemap.find('loc').text
-                urls.extend(self.parse_sitemap(self.fetch_url(sitemap_url)))
+                urls.extend(self.parse_sitemap(self.fetch_url(sitemap_url, xml=True)))
         elif soup.find('urlset'):
             urls = [url.find('loc').text for url in soup.find_all('url')]
         return urls
 
-    def fetch_url(self, url):
+    def fetch_url(self, url, xml=False):
         response = requests.get(url)
         response.raise_for_status()
-        return BeautifulSoup(response.content, features='xml')
+        if xml:
+            return BeautifulSoup(response.content, features='xml')
+        return BeautifulSoup(response.content, features='html.parser')
 
     def get_sitemap_pages(self, url):
         sitemap_url = urljoin(url, '/sitemap.xml')
         try:
-            soup = self.fetch_url(sitemap_url)
+            soup = self.fetch_url(sitemap_url, xml=True)
         except HTTPError as err:
             print(err)
             return None
