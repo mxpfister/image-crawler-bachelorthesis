@@ -1,4 +1,5 @@
 import requests
+from requests.exceptions import InvalidSchema
 from collections import Counter
 from urllib.parse import urljoin
 from bs4 import BeautifulSoup
@@ -23,12 +24,14 @@ class ImageDataExtractor:
         # TODO make frequency global to website
         image_freq = Counter([img['src'] for img in self.soup.find_all('img', src=True)])
         for image in self.soup.find_all('img', src=True):
-            src = image['src']
             width = image.get('width', 0)
             height = image.get('height', 0)
+            src = image['src']
             image_response = self.get_image_response(src)
+            if image_response is None:
+                continue
             content_type = image_response.headers.get('Content-Type', '')
-            if "image" not in content_type or image_response.status_code != 200:
+            if "image" not in content_type:
                 continue
             if 'image/svg+xml' in content_type:
                 image_format = 'SVG'
@@ -62,8 +65,15 @@ class ImageDataExtractor:
 
     def get_image_response(self, image_src):
         image_url = urljoin(self.base_url, image_src)
-        # TODO stream=True needed?
-        return requests.get(image_url)
+        try:
+            response = requests.get(image_url)
+            response.raise_for_status()
+            return response
+        except InvalidSchema:
+            return None
+        except requests.RequestException as e:
+            print(f"Request failed for URL: {image_src} with error: {e}")
+            return None
 
     def get_dominant_color(self, image):
         image = image.resize((50, 50))
