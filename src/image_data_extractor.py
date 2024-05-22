@@ -3,7 +3,7 @@ from requests.exceptions import InvalidSchema
 from collections import Counter
 from urllib.parse import urljoin
 from bs4 import BeautifulSoup
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 from io import BytesIO
 
 # TODO get all/important semantic html elements
@@ -42,11 +42,15 @@ class ImageDataExtractor:
                 # dominant_color = self.get_dominant_color_from_svg(image_response.content)
                 dominant_color = None
             else:
-                image_file = Image.open(BytesIO(image_response.content))
-                image_size = int(image_response.headers.get('content-length', 0))
-                image_format = image_file.format
-                (image_width, image_height) = image_file.size
-                dominant_color = self.get_dominant_color(image_file)
+                try:
+                    image_file = Image.open(BytesIO(image_response.content))
+                    image_size = int(image_response.headers.get('content-length', 0))
+                    image_format = image_file.format
+                    (image_width, image_height) = image_file.size
+                    dominant_color = self.get_dominant_color(image_file)
+                except UnidentifiedImageError as err:
+                    print(f'Unknown image error: {err} at {src}')
+                    continue
             images.append({
                 'image_url': urljoin(self.base_url, src),
                 'src': src,
@@ -78,7 +82,7 @@ class ImageDataExtractor:
     def get_dominant_color(self, image):
         image = image.resize((50, 50))
         result = image.convert('P', palette=Image.ADAPTIVE, colors=1)
-        result = result.convert('RGB')
+        result = result.convert('RGBA')
         dominant_color = result.getcolors(50 * 50)[0][1]
         return dominant_color
 
