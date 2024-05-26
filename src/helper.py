@@ -18,12 +18,12 @@ def extract_internal_links(soup, url):
     return list(internal_links)
 
 
-# TODO: filter ids mailto:
 def extract_external_links(soup, url):
     domain = urlparse(url).netloc
     external_links = set()
     for link in soup.find_all('a', href=True):
         href = link['href']
-        if not href.startswith('/') and not href.startswith('#') and domain not in urlparse(href).netloc:
+        if not href.startswith('/') and not href.startswith('#') and not href.startswith(
+                'mailto') and domain not in urlparse(href).netloc:
             external_links.add(href)
     return list(external_links)
