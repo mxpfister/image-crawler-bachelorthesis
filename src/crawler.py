@@ -7,6 +7,7 @@ from src.image_data_extractor import ImageDataExtractor
 from src.page_data_extractor import PageDataExtractor
 import requests
 import src.helper as helper
+from collections import Counter
 
 config = configparser.ConfigParser()
 config.read("../config.properties")
@@ -18,6 +19,7 @@ class Crawler:
                            password=config['database']['db.password'], database=config['database']['db.database'])
         self.visited_urls = set()
         self.to_visit = []
+        self.image_freq = Counter()
 
     def crawl(self, url):
         sitemap_pages = self.get_sitemap_pages(url)
@@ -43,7 +45,8 @@ class Crawler:
         except HTTPError as err:
             print(f"Error: {err} for URL: {url}")
             return
-
+        # TODO save image frequence only when its the last page
+        self.image_freq.update([img['src'] for img in soup.find_all('img', src=True)])
         # TODO save page only if it contains images
         self.crawl_pages(soup, url)
         self.crawl_images(soup, url)

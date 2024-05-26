@@ -21,8 +21,6 @@ class ImageDataExtractor:
     # TODO save image
     def extract_image_data(self):
         images = []
-        # TODO make frequency global to website
-        image_freq = Counter([img['src'] for img in self.soup.find_all('img', src=True)])
         for image in self.soup.find_all('img', src=True):
             width = image.get('width', 0)
             height = image.get('height', 0)
