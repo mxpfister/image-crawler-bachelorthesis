@@ -1,9 +1,9 @@
 import requests
 from requests.exceptions import InvalidSchema
-from collections import Counter
 from urllib.parse import urljoin
 from bs4 import BeautifulSoup
 from PIL import Image, UnidentifiedImageError
+from src.ftp_connector import FTPConnector
 from io import BytesIO
 
 # TODO get all/important semantic html elements
@@ -17,14 +17,15 @@ class ImageDataExtractor:
     def __init__(self, soup, base_url):
         self.soup = soup
         self.base_url = base_url
+        self.ftp_connector = FTPConnector()
 
-    # TODO save image
     def extract_image_data(self):
         images = []
         for image in self.soup.find_all('img', src=True):
             width = image.get('width', 0)
             height = image.get('height', 0)
             src = image['src']
+            image_name = src.split('/')[-1]
             image_response = self.get_image_response(src)
             if image_response is None:
                 continue
@@ -52,6 +53,7 @@ class ImageDataExtractor:
             images.append({
                 'image_url': urljoin(self.base_url, src),
                 'src': src,
+                'file_name': image_name,
                 'alt': image.get('alt', ''),
                 'title': image.get('title', ''),
                 'image_caption': self.get_image_caption(image),
@@ -63,6 +65,7 @@ class ImageDataExtractor:
                 'image_format': image_format,
                 'dominant_color': dominant_color
             })
+            self.ftp_connector.upload_to_ftp(image_name, image_response.content)
         return images
 
     def get_image_response(self, image_src):
