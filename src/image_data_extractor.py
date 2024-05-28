@@ -6,11 +6,7 @@ from PIL import Image, UnidentifiedImageError
 from src.ftp_connector import FTPConnector
 from io import BytesIO
 
-# TODO get all/important semantic html elements
-SEMANTIC_HTML_ELEMENTS = [
-    'article', 'aside', 'details', 'figcaption', 'figure', 'footer', 'header', 'main', 'mark', 'nav', 'section',
-    'summary', 'time'
-]
+SEMANTIC_HTML_LOCATION_ELEMENTS = ['article', 'aside', 'footer', 'header', 'main', 'nav', 'section']
 
 
 class ImageDataExtractor:
@@ -95,7 +91,7 @@ class ImageDataExtractor:
     def find_semantic_parent(self, element):
         parent = element.parent
         while parent:
-            if parent.name in SEMANTIC_HTML_ELEMENTS:
+            if parent.name in SEMANTIC_HTML_LOCATION_ELEMENTS:
                 return parent.name
             parent = parent.parent
         return None
