@@ -3,8 +3,11 @@ from requests.exceptions import InvalidSchema
 from urllib.parse import urljoin
 from bs4 import BeautifulSoup
 from PIL import Image, UnidentifiedImageError
+from src.database import Database
 from src.ftp_connector import FTPConnector
 from io import BytesIO
+import hashlib
+import configparser
 
 SEMANTIC_HTML_LOCATION_ELEMENTS = ['article', 'aside', 'footer', 'header', 'main', 'nav', 'section']
 
@@ -14,6 +17,11 @@ class ImageDataExtractor:
         self.soup = soup
         self.base_url = base_url
         self.ftp_connector = FTPConnector()
+        self.config = configparser.ConfigParser()
+        self.config.read("../config.properties")
+        self.db = Database(host=self.config['database']['host'], username=self.config['database']['username'],
+                           password=self.config['database']['password'], database=self.config['database']['database'],
+                           port=self.config['database']['port'])
 
     def extract_image_data(self):
         images = []
@@ -46,7 +54,11 @@ class ImageDataExtractor:
                 except UnidentifiedImageError as err:
                     print(f'Unknown image error: {err} at {src}')
                     continue
+            img_hash = hashlib.md5(image_response.content).hexdigest()
+            if self.db.image_exists(img_hash) or self.ftp_connector.image_exists(img_hash, image_format):
+                continue
             images.append({
+                'hash': img_hash,
                 'image_url': urljoin(self.base_url, src),
                 'src': src,
                 'file_name': image_name,
@@ -61,7 +73,7 @@ class ImageDataExtractor:
                 'image_format': image_format,
                 'dominant_color': dominant_color
             })
-            self.ftp_connector.upload_to_ftp(image_name, image_response.content)
+            self.ftp_connector.upload_to_ftp(img_hash + '.' + image_format, image_response.content)
         return images
 
     def get_image_response(self, image_src):

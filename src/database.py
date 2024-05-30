@@ -45,3 +45,9 @@ class Database:
 
     def fetch_one(self):
         return self.cursor.fetchone()
+
+    def image_exists(self, img_hash):
+        query = "SELECT COUNT(*) FROM images WHERE hash = %s"
+        self.cursor.execute(query, (img_hash,))
+        result = self.cursor.fetchone()
+        return result[0] > 0

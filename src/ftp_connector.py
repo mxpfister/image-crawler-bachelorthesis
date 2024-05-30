@@ -34,3 +34,7 @@ class FTPConnector:
     def upload_to_ftp(self, file_name, file_content):
         with BytesIO(file_content) as file:
             self.ftp.storbinary(f'STOR {file_name}', file)
+
+    def image_exists(self, img_hash, img_format):
+        return f'{img_hash}.{img_format}' in self.ftp.nlst()
+
