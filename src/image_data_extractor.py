@@ -73,7 +73,7 @@ class ImageDataExtractor:
                 'image_format': image_format,
                 'dominant_color': dominant_color
             })
-            self.ftp_connector.upload_to_ftp(img_hash + '.' + image_format, image_response.content)
+            self.ftp_connector.upload_to_ftp(img_hash + '.' + image_format.lower(), image_response.content)
         return images
 
     def get_image_response(self, image_src):
