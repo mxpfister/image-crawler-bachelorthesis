@@ -37,7 +37,7 @@ class ImageDataExtractor:
             if "image" not in content_type:
                 continue
             if 'image/svg+xml' in content_type:
-                image_format = 'SVG'
+                image_format = 'svg'
                 image_size = len(image_response.content)
                 image_width = width
                 image_height = height
@@ -48,14 +48,14 @@ class ImageDataExtractor:
                 try:
                     image_file = Image.open(BytesIO(image_response.content))
                     image_size = int(image_response.headers.get('content-length', 0))
-                    image_format = image_file.format
+                    image_format = image_file.format.lower()
                     (image_width, image_height) = image_file.size
                     dominant_color = self.get_dominant_color(image_file)
                 except UnidentifiedImageError as err:
                     print(f'Unknown image error: {err} at {src}')
                     continue
             img_hash = hashlib.md5(image_response.content).hexdigest()
-            if self.db.image_exists(img_hash) or self.ftp_connector.image_exists(img_hash, image_format):
+            if self.ftp_connector.image_exists(img_hash, image_format) or self.db.image_exists(img_hash):
                 continue
             images.append({
                 'hash': img_hash,
@@ -73,7 +73,7 @@ class ImageDataExtractor:
                 'file_format': image_format,
                 'dominant_color': str(dominant_color)
             })
-            self.ftp_connector.upload_to_ftp(img_hash + '.' + image_format.lower(), image_response.content)
+            self.ftp_connector.upload_to_ftp(img_hash + '.' + image_format, image_response.content)
         return images
 
     def get_image_response(self, image_src):
