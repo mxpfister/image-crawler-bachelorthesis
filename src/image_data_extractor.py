@@ -62,16 +62,16 @@ class ImageDataExtractor:
                 'image_url': urljoin(self.base_url, src),
                 'src': src,
                 'file_name': image_name,
-                'alt': image.get('alt', ''),
-                'title': image.get('title', ''),
+                'alt_text': image.get('alt', ''),
+                'image_title': image.get('title', ''),
                 'image_caption': self.get_image_caption(image),
                 'width': image_width,
                 'height': image_height,
                 'wrapped_element': image.parent.name,
                 'semantic_context': self.find_semantic_parent(image),
-                'image_size': image_size,
-                'image_format': image_format,
-                'dominant_color': dominant_color
+                'file_size': image_size,
+                'file_format': image_format,
+                'dominant_color': str(dominant_color)
             })
             self.ftp_connector.upload_to_ftp(img_hash + '.' + image_format.lower(), image_response.content)
         return images

@@ -1,4 +1,6 @@
 import src.helper as helper
+import json
+
 
 class PageDataExtractor:
     def __init__(self, soup, url):
@@ -7,15 +9,16 @@ class PageDataExtractor:
 
     def extract_page_data(self):
         return {
-            'title': self.soup.title.string if self.soup.title else '',
+            'title': str(self.soup.title.string) if self.soup.title else '',
+            'url': self.url,
             'meta_description': self.extract_meta_description(),
             # 'html_raw': self.soup.prettify(),
             'language': self.soup.html.get('lang') if self.soup.html else '',
             'word_count': self.extract_word_count(),
             'image_count': len(self.soup.find_all('img')),
-            'page_structure': self.extract_page_structure(),
-            'external_links': len(helper.extract_external_links(self.soup, self.url)),
-            'internal_links': len(helper.extract_internal_links(self.soup, self.url))
+            'page_structure': str(self.extract_page_structure()),
+            'external_link_count': len(helper.extract_external_links(self.soup, self.url)),
+            'internal_link_count': len(helper.extract_internal_links(self.soup, self.url))
         }
         
     def extract_meta_description(self):
@@ -32,7 +35,7 @@ class PageDataExtractor:
             'lists': len(self.soup.find_all(['ul', 'ol'])),
             'tables': len(self.soup.find_all('table'))
         }
-        return structure
+        return json.dumps(structure)
 
     def extract_word_count(self):
         content = ' '.join([p.get_text() for p in self.soup.find_all('p')])

@@ -48,9 +48,17 @@ class Crawler:
             return
         # TODO save image frequence only when its the last page
         self.image_freq.update([img['src'] for img in soup.find_all('img', src=True)])
-        # TODO save page only if it contains images
-        self.crawl_pages(soup, url)
-        self.crawl_images(soup, url)
+
+        page_data = self.crawl_page(soup, url)
+        image_data = self.crawl_images(soup, url)
+        if image_data:
+            page_id = self.db.insert_page(page_data)
+            for image in image_data:
+                image['page_id'] = page_id
+                # TODO
+                image['frequency_on_website'] = 0
+                self.db.insert_image(image)
+            print("Data saved")
 
         internal_links = helper.extract_internal_links(soup, url)
         for link in internal_links:
