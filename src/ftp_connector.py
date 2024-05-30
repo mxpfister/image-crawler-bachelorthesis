@@ -15,7 +15,7 @@ class FTPConnector:
         self.config = configparser.ConfigParser()
         self.config.read("../config.properties")
         self.ftp = FTP(self.config['ftp']['server'])
-        self.ftp.login(self.config['ftp']['username'], self.config['ftp']['password'])
+        self.ftp.login(self.config['ftp']['ftp.username'], self.config['ftp']['ftp.password'])
         self.chdir(self.config['ftp']['img-path'])
 
     def chdir(self, dir_path):

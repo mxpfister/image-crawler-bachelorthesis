@@ -65,19 +65,13 @@ class Crawler:
             if link not in self.visited_urls and link not in self.to_visit:
                 self.to_visit.append(link)
 
-    def crawl_pages(self, soup, urls):
-        page_data_extractor = PageDataExtractor(soup, urls)
-        data = page_data_extractor.extract_page_data()
-        print('PAGE DATA')
-        print(data)
-        print(len(data))
+    def crawl_page(self, soup, url):
+        page_data_extractor = PageDataExtractor(soup, url)
+        return page_data_extractor.extract_page_data()
 
     def crawl_images(self, soup, url):
         img_data_extractor = ImageDataExtractor(soup, url)
-        data = img_data_extractor.extract_image_data()
-        print('IMAGE DATA')
-        print(data)
-        print(len(data))
+        return img_data_extractor.extract_image_data()
 
     def fetch_url(self, url, xml=False):
         response = requests.get(url)
