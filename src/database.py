@@ -2,52 +2,52 @@ import mysql.connector
 
 
 class Database:
-    def __init__(self, host, username, password, database):
-        self.host = host
-        self.username = username
-        self.password = password
-        self.database = database
-        self.connection = None
-        self.cursor = None
+    _instance = None
+
+    def __new__(cls, host, username, password, database, port):
+        if cls._instance is None:
+            cls._instance = super(Database, cls).__new__(cls)
+            cls._instance._connection = None
+            cls._instance.host = host
+            cls._instance.username = username
+            cls._instance.password = password
+            cls._instance.database = database
+            cls._instance.port = port
+        return cls._instance
+
 
     def connect(self):
         try:
-            self.connection = mysql.connector.connect(
+            if self._connection is not None:
+                return
+            self._connection = mysql.connector.connect(
                 host=self.host,
                 user=self.username,
                 password=self.password,
-                database=self.database
+                database=self.database,
+                port=self.port
             )
-            self.cursor = self.connection.cursor(buffered=True)
-            print("Connected to MySQL database")
         except mysql.connector.Error as err:
             print(f"Error: {err}")
 
     def disconnect(self):
-        if self.connection.is_connected():
-            self.cursor.close()
-            self.connection.close()
+        if self._connection.is_connected():
+            self._connection.close()
+            self._connection = None
             print("Disconnected from MySQL database")
 
     def execute_query(self, query, params=None):
         try:
-            if params:
-                self.cursor.execute(query, params)
-            else:
-                self.cursor.execute(query)
-            self.connection.commit()
+            self.connect()
+            cursor = self._connection.cursor()
+            cursor.execute(query, params)
+            self._connection.commit()
             print("Query executed successfully")
         except mysql.connector.Error as err:
             print(f"Error: {err}")
 
-    def fetch_all(self):
-        return self.cursor.fetchall()
-
-    def fetch_one(self):
-        return self.cursor.fetchone()
-
     def image_exists(self, img_hash):
-        query = "SELECT COUNT(*) FROM images WHERE hash = %s"
-        self.cursor.execute(query, (img_hash,))
-        result = self.cursor.fetchone()
+        query = "SELECT COUNT(*) FROM image WHERE hash = %s"
+        self.execute_query(query, img_hash)
+        result = self._connection.cursor.fetchone()
         return result[0] > 0

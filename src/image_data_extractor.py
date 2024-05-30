@@ -19,8 +19,8 @@ class ImageDataExtractor:
         self.ftp_connector = FTPConnector()
         self.config = configparser.ConfigParser()
         self.config.read("../config.properties")
-        self.db = Database(host=self.config['database']['host'], username=self.config['database']['username'],
-                           password=self.config['database']['password'], database=self.config['database']['database'],
+        self.db = Database(host=self.config['database']['db.host'], username=self.config['database']['db.username'],
+                           password=self.config['database']['db.password'], database=self.config['database']['database'],
                            port=self.config['database']['port'])
 
     def extract_image_data(self):

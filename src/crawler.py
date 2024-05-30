@@ -16,7 +16,8 @@ config.read("../config.properties")
 class Crawler:
     def __init__(self):
         self.db = Database(host=config['database']['db.host'], username=config['database']['db.username'],
-                           password=config['database']['db.password'], database=config['database']['db.database'])
+                           password=config['database']['db.password'], database=config['database']['database'],
+                           port=config['database']['port'])
         self.visited_urls = set()
         self.to_visit = []
         self.image_freq = Counter()
