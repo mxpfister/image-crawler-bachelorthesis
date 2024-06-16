@@ -11,6 +11,8 @@ def extract_internal_links(soup, url):
     internal_links = set()
     for link in soup.find_all('a', href=True):
         href = link['href']
+        if href.startswith('#') or bool(urlparse(href).fragment):
+            continue
         if href.startswith('/'):
             internal_links.add(urljoin(url, href))
         elif domain in urlparse(href).netloc:
