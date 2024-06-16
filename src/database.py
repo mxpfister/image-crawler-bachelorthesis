@@ -83,13 +83,20 @@ class Database:
             self._connection = None
             print("Disconnected from MySQL database")
 
-    def execute_query(self, query, params=None):
+    def execute_query(self, query, params=None, fetch=None):
         try:
             self.connect()
-            cursor = self._connection.cursor()
+            cursor = self._connection.cursor(buffered=True)
             cursor.execute(query, params)
             self._connection.commit()
+            if fetch == 'all':
+                result = cursor.fetchall()
+            elif fetch == 'one':
+                result = cursor.fetchone()
+            else:
+                result = None
             print("Query executed successfully")
+            return result
         except mysql.connector.Error as err:
             print(f"Error: {err}")
 
