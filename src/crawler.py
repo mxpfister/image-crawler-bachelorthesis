@@ -43,6 +43,8 @@ class Crawler:
         self.visited_urls.add(url)
         try:
             soup = self.fetch_url(url)
+            if soup is None:
+                return
         except HTTPError as err:
             print(f"Error: {err} for URL: {url}")
             return
@@ -76,6 +78,9 @@ class Crawler:
     def fetch_url(self, url, xml=False):
         response = requests.get(url)
         response.raise_for_status()
+        content_type = response.headers.get('Content-Type', '')
+        if 'html' not in content_type or 'xml' not in content_type:
+            return None
         if xml:
             return BeautifulSoup(response.content, features='xml')
         return BeautifulSoup(response.content, features='html.parser')
