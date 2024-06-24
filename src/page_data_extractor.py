@@ -10,6 +10,7 @@ class PageDataExtractor:
     def extract_page_data(self):
         return {
             'title': str(self.soup.title.string) if self.soup.title else '',
+            'top_headline': self.soup.find('h1').get_text() if self.soup.find('h1') else '',
             'url': self.url,
             'meta_description': self.extract_meta_description(),
             # 'html_raw': self.soup.prettify(),

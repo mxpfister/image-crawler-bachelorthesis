@@ -23,6 +23,7 @@ class Database:
             title VARCHAR(255),
             meta_description TEXT,
             language VARCHAR(10),
+            top_headline TEXT,
             word_count INT,
             image_count INT,
             page_type VARCHAR(50),
@@ -109,10 +110,10 @@ class Database:
 
     def insert_page(self, page_data):
         query = """
-        INSERT INTO page (title, meta_description, language, word_count, image_count, page_structure, external_link_count, internal_link_count, url)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        INSERT INTO page (title, meta_description, language, top_headline, word_count, image_count, page_structure, external_link_count, internal_link_count, url)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
-        params = (page_data['title'], page_data['meta_description'], page_data['language'], page_data['word_count'],
+        params = (page_data['title'], page_data['meta_description'], page_data['language'], page_data['top_headline'], page_data['word_count'],
                   page_data['image_count'], page_data['page_structure'], page_data['external_link_count'],
                   page_data['internal_link_count'], page_data['url'])
         self.connect()
