@@ -55,8 +55,6 @@ class ImageDataExtractor:
                     print(f'Unknown image error: {err} at {src}')
                     continue
             img_hash = hashlib.md5(image_response.content).hexdigest()
-            if self.ftp_connector.image_exists(img_hash, image_format) or self.db.image_exists(img_hash):
-                continue
             images.append({
                 'hash': img_hash,
                 'image_url': urljoin(self.base_url, src),
@@ -73,7 +71,8 @@ class ImageDataExtractor:
                 'file_format': image_format,
                 'dominant_color': str(dominant_color)
             })
-            self.ftp_connector.upload_to_ftp(img_hash + '.' + image_format, image_response.content)
+            if not self.ftp_connector.image_exists(img_hash, image_format):
+                self.ftp_connector.upload_to_ftp(img_hash + '.' + image_format, image_response.content)
         return images
 
     def get_image_response(self, image_src):
