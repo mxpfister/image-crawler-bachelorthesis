@@ -63,6 +63,7 @@ class ImageDataExtractor:
                 'alt_text': image.get('alt', ''),
                 'image_title': image.get('title', ''),
                 'image_caption': self.get_image_caption(image),
+                'headline_above_image': self.get_headline_above_image(image),
                 'width': image_width,
                 'height': image_height,
                 'wrapped_element': image.parent.name,
@@ -105,6 +106,12 @@ class ImageDataExtractor:
             if parent.name in SEMANTIC_HTML_LOCATION_ELEMENTS:
                 return parent.name
             parent = parent.parent
+        return None
+
+    def get_headline_above_image(self, img_element):
+        headline = img_element.find_previous(['h1', 'h2', 'h3', 'h4', 'h5', 'h6'])
+        if headline is not None:
+            return headline.get_text()
         return None
 
     def get_image_caption(self, img):
