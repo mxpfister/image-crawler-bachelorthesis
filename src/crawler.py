@@ -20,16 +20,18 @@ class Crawler:
         self.visited_urls = set()
         self.to_visit = []
 
-    def crawl(self, url):
+    def crawl(self, url, page_count=False):
         sitemap_pages = self.get_sitemap_pages(url)
         if sitemap_pages:
             print("Crawling website through sitemap...")
             for page in sitemap_pages:
+                if page_count and len(self.visited_urls) >= page_count:
+                    break
                 self.visit_url(page)
         else:
             print(f'No sitemap found for {url}. Crawling internal links...')
             self.to_visit.append(url)
-            while self.to_visit:
+            while self.to_visit and (not page_count or len(self.visited_urls) < page_count):
                 next_url = self.to_visit.pop(0)
                 if next_url not in self.visited_urls:
                     self.visit_url(next_url)

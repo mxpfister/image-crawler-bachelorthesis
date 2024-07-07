@@ -20,5 +20,5 @@ print(domains)
 
 for domain in domains:
     crawler = Crawler()
-    crawler.crawl(domain)
+    crawler.crawl(domain, page_count=config['crawler']['page-count'])
     print(f"Finished crawling {domain}")
