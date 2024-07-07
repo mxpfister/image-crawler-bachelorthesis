@@ -41,16 +41,12 @@ class ImageDataExtractor:
                 image_size = len(image_response.content)
                 image_width = width
                 image_height = height
-                # TODO
-                # dominant_color = self.get_dominant_color_from_svg(image_response.content)
-                dominant_color = None
             else:
                 try:
                     image_file = Image.open(BytesIO(image_response.content))
                     image_size = int(image_response.headers.get('content-length', 0))
                     image_format = image_file.format.lower()
                     (image_width, image_height) = image_file.size
-                    dominant_color = self.get_dominant_color(image_file)
                 except UnidentifiedImageError as err:
                     print(f'Unknown image error: {err} at {src}')
                     continue
@@ -69,8 +65,7 @@ class ImageDataExtractor:
                 'wrapped_element': image.parent.name,
                 'semantic_context': self.find_semantic_parent(image),
                 'file_size': image_size,
-                'file_format': image_format,
-                'dominant_color': str(dominant_color)
+                'file_format': image_format
             })
             if not self.ftp_connector.image_exists(img_hash, image_format):
                 self.ftp_connector.upload_to_ftp(img_hash + '.' + image_format, image_response.content)
@@ -87,18 +82,6 @@ class ImageDataExtractor:
         except requests.RequestException as e:
             print(f"Request failed for URL: {image_src} with error: {e}")
             return None
-
-    def get_dominant_color(self, image):
-        image = image.resize((50, 50))
-        result = image.convert('P', palette=Image.ADAPTIVE, colors=1)
-        result = result.convert('RGBA')
-        dominant_color = result.getcolors(50 * 50)[0][1]
-        return dominant_color
-
-    def get_dominant_color_from_svg(self, svg_data):
-        png_data = cairo.svg2png(bytestring=svg_data)
-        image = Image.open(BytesIO(png_data))
-        return self.get_dominant_color(image)
 
     def find_semantic_parent(self, element):
         parent = element.parent

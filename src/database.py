@@ -27,7 +27,6 @@ class Database:
             word_count INT,
             image_count INT,
             page_type VARCHAR(50),
-            page_structure JSON,
             external_link_count INT,
             internal_link_count INT,
             url VARCHAR(2048) NOT NULL,
@@ -55,7 +54,6 @@ class Database:
             file_size INT,
             file_format VARCHAR(30),
             frequency_on_website INT,
-            dominant_color VARCHAR(50),
             extracted_text TEXT,
             is_decorative BOOLEAN,
             date_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -110,11 +108,11 @@ class Database:
 
     def insert_page(self, page_data):
         query = """
-        INSERT INTO page (title, meta_description, language, top_headline, word_count, image_count, page_structure, external_link_count, internal_link_count, url)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        INSERT INTO page (title, meta_description, language, top_headline, word_count, image_count, external_link_count, internal_link_count, url)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
         params = (page_data['title'], page_data['meta_description'], page_data['language'], page_data['top_headline'], page_data['word_count'],
-                  page_data['image_count'], page_data['page_structure'], page_data['external_link_count'],
+                  page_data['image_count'], page_data['external_link_count'],
                   page_data['internal_link_count'], page_data['url'])
         self.connect()
         cursor = self._connection.cursor()
@@ -125,13 +123,12 @@ class Database:
 
     def insert_image(self, image_data):
         query = """
-        INSERT INTO image (page_id, hash, image_url, src, file_name, alt_text, image_title, image_caption, width, height, headline_above_image, wrapped_element, semantic_context, file_size, file_format, frequency_on_website, dominant_color)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        INSERT INTO image (page_id, hash, image_url, src, file_name, alt_text, image_title, image_caption, width, height, headline_above_image, wrapped_element, semantic_context, file_size, file_format, frequency_on_website)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
         params = (
             image_data['page_id'], image_data['hash'], image_data['image_url'], image_data['src'],
             image_data['file_name'], image_data['alt_text'], image_data['image_title'], image_data['image_caption'],
             image_data['width'], image_data['height'], image_data['headline_above_image'], image_data['wrapped_element'], image_data['semantic_context'],
-            image_data['file_size'], image_data['file_format'], image_data['frequency_on_website'],
-            image_data['dominant_color'])
+            image_data['file_size'], image_data['file_format'], image_data['frequency_on_website'])
         self.execute_query(query, params)
