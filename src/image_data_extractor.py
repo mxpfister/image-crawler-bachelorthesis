@@ -8,6 +8,7 @@ from src.ftp_connector import FTPConnector
 from io import BytesIO
 import hashlib
 import configparser
+from cairosvg import svg2png
 
 SEMANTIC_HTML_LOCATION_ELEMENTS = ['article', 'aside', 'footer', 'header', 'main', 'nav', 'section']
 
@@ -36,8 +37,12 @@ class ImageDataExtractor:
             content_type = image_response.headers.get('Content-Type', '')
             if "image" not in content_type:
                 continue
+            converted_svg = None
             if 'image/svg+xml' in content_type:
                 image_format = 'svg'
+                svg = image_response.content
+                converted_svg = svg2png(bytestring=svg)
+                image_file = Image.open(BytesIO(converted_svg))
                 image_size = len(image_response.content)
                 image_width = width
                 image_height = height
@@ -67,8 +72,10 @@ class ImageDataExtractor:
                 'file_size': image_size,
                 'file_format': image_format
             })
+            image_content = converted_svg if image_format == 'svg' else image_response.content
+            image_format = 'png' if image_format == 'svg' else image_format
             if not self.ftp_connector.image_exists(img_hash, image_format):
-                self.ftp_connector.upload_to_ftp(img_hash + '.' + image_format, image_response.content)
+                self.ftp_connector.upload_to_ftp(img_hash + '.' + image_format, image_content)
         return images
 
     def get_image_response(self, image_src):
