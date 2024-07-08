@@ -31,7 +31,7 @@ class Crawler:
         else:
             print(f'No sitemap found for {url}. Crawling internal links...')
             self.to_visit.append(url)
-            while self.to_visit and (not page_count or len(self.visited_urls) < page_count):
+            while self.to_visit and (not page_count or len(self.visited_urls) < int(page_count)):
                 next_url = self.to_visit.pop(0)
                 if next_url not in self.visited_urls:
                     self.visit_url(next_url)

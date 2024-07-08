@@ -27,8 +27,8 @@ class ImageDataExtractor:
     def extract_image_data(self):
         images = []
         for image in self.soup.find_all('img', src=True):
-            width = image.get('width', 0)
-            height = image.get('height', 0)
+            width = image.get('width', 100)
+            height = image.get('height', 100)
             src = image['src']
             image_name = src.split('/')[-1]
             image_response = self.get_image_response(src)
