@@ -67,6 +67,7 @@ class ImageDataExtractor:
                 'headline_above_image': self.get_headline_above_image(image),
                 'width': image_width,
                 'height': image_height,
+                'contains_transparency': self.has_transparency(image_file),
                 'wrapped_element': image.parent.name,
                 'semantic_context': self.find_semantic_parent(image),
                 'file_size': image_size,
@@ -103,6 +104,20 @@ class ImageDataExtractor:
         if headline is not None:
             return headline.get_text()
         return None
+
+    def has_transparency(self, image):
+        if image.info.get("transparency", None) is not None:
+            return True
+        if image.mode == "P":
+            transparent = image.info.get("transparency", -1)
+            for _, index in image.getcolors():
+                if index == transparent:
+                    return True
+        elif image.mode == "RGBA":
+            extrema = image.getextrema()
+            if extrema[3][0] < 255:
+                return True
+        return False
 
     def get_image_caption(self, img):
         figure = img.find_parent('figure')

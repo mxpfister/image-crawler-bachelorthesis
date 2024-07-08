@@ -48,6 +48,7 @@ class Database:
             image_caption TEXT,
             width INT,
             height INT,
+            contains_transparency BOOLEAN,
             headline_above_image TEXT,
             wrapped_element VARCHAR(50),
             semantic_context VARCHAR(50),
@@ -123,12 +124,12 @@ class Database:
 
     def insert_image(self, image_data):
         query = """
-        INSERT INTO image (page_id, hash, image_url, src, file_name, alt_text, image_title, image_caption, width, height, headline_above_image, wrapped_element, semantic_context, file_size, file_format)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        INSERT INTO image (page_id, hash, image_url, src, file_name, alt_text, image_title, image_caption, width, height, contains_transparency, headline_above_image, wrapped_element, semantic_context, file_size, file_format)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
         params = (
             image_data['page_id'], image_data['hash'], image_data['image_url'], image_data['src'],
             image_data['file_name'], image_data['alt_text'], image_data['image_title'], image_data['image_caption'],
-            image_data['width'], image_data['height'], image_data['headline_above_image'], image_data['wrapped_element'], image_data['semantic_context'],
+            image_data['width'], image_data['height'], image_data['contains_transparency'], image_data['headline_above_image'], image_data['wrapped_element'], image_data['semantic_context'],
             image_data['file_size'], image_data['file_format'])
         self.execute_query(query, params)
