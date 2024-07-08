@@ -118,8 +118,9 @@ class Database:
         self.connect()
         cursor = self._connection.cursor()
         cursor.execute(query, params)
-        last_row_id = self._connection.cursor().lastrowid
         self._connection.commit()
+        cursor.execute("SELECT LAST_INSERT_ID()")
+        last_row_id = cursor.fetchone()[0]
         return last_row_id
 
     def insert_image(self, image_data):
