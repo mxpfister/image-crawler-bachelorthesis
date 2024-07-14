@@ -17,8 +17,10 @@ class Crawler:
         self.db = Database(host=config['database']['db.host'], username=config['database']['db.username'],
                            password=config['database']['db.password'], database=config['database']['database'],
                            port=config['database']['port'])
+    def __init__(self, params):
         self.visited_urls = set()
         self.to_visit = []
+        self.params = params
 
     def crawl(self, url, page_count=False):
         sitemap_pages = self.get_sitemap_pages(url)
@@ -35,6 +37,8 @@ class Crawler:
                 next_url = self.to_visit.pop(0)
                 if next_url not in self.visited_urls:
                     self.visit_url(next_url)
+    def crawl(self, url):
+        page_count = self.params.get('page_count', False)
 
     def visit_url(self, url):
         if url in self.visited_urls:
@@ -68,11 +72,17 @@ class Crawler:
         return page_data_extractor.extract_page_data()
 
     def crawl_images(self, soup, url):
+        max_images = self.params.get('max_images_page', False)
         img_data_extractor = ImageDataExtractor(soup, url)
-        return img_data_extractor.extract_image_data()
+        return img_data_extractor.extract_image_data(max_images)
 
     def fetch_url(self, url, xml=False):
-        response = requests.get(url)
+        request_timeout = self.params.get('timeout', 10)
+        try:
+            response = requests.get(url, timeout=request_timeout)
+        except requests.exceptions.RequestException as e:
+            print(f"Request failed: {e}")
+            return None
         response.raise_for_status()
         content_type = response.headers.get('Content-Type', '')
         if 'html' not in content_type and 'xml' not in content_type:

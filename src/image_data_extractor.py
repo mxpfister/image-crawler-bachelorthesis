@@ -24,9 +24,11 @@ class ImageDataExtractor:
                            password=self.config['database']['db.password'], database=self.config['database']['database'],
                            port=self.config['database']['port'])
 
-    def extract_image_data(self):
+    def extract_image_data(self, max_images):
         images = []
         for image in self.soup.find_all('img', src=True):
+            if max_images and len(images) >= max_images:
+                break
             width = image.get('width', 100)
             height = image.get('height', 100)
             src = image['src']

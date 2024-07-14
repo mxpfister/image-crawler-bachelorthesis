@@ -5,6 +5,12 @@ import configparser
 config = configparser.ConfigParser()
 config.read("../config.properties")
 
+params = {
+    'page_count': 10,
+    'max_images_page': 7,
+    'timeout': 5
+}
+
 db = Database(host=config['database']['db.host'], username=config['database']['db.username'],
               password=config['database']['db.password'], database=config['database']['database'],
               port=config['database']['port'])
@@ -19,6 +25,6 @@ domains = [d[0] for d in domains_result]
 print(domains)
 
 for domain in domains:
-    crawler = Crawler()
-    crawler.crawl(domain, page_count=config['crawler']['page-count'])
+    crawler = Crawler(params)
+    crawler.crawl(domain)
     print(f"Finished crawling {domain}")
