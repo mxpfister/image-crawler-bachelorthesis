@@ -45,13 +45,11 @@ class ImageDataExtractor:
                 svg = image_response.content
                 converted_svg = svg2png(bytestring=svg)
                 image_file = Image.open(BytesIO(converted_svg))
-                image_size = len(image_response.content)
                 image_width = width
                 image_height = height
             else:
                 try:
                     image_file = Image.open(BytesIO(image_response.content))
-                    image_size = int(image_response.headers.get('content-length', 0))
                     image_format = image_file.format.lower()
                     (image_width, image_height) = image_file.size
                 except UnidentifiedImageError as err:
@@ -72,7 +70,6 @@ class ImageDataExtractor:
                 'contains_transparency': self.has_transparency(image_file),
                 'wrapped_element': image.parent.name,
                 'semantic_context': self.find_semantic_parent(image),
-                'file_size': image_size,
                 'file_format': image_format
             })
             image_content = converted_svg if image_format == 'svg' else image_response.content
