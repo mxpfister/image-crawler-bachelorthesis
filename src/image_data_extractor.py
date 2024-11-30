@@ -39,6 +39,8 @@ class ImageDataExtractor:
             content_type = image_response.headers.get('Content-Type', '')
             if "image" not in content_type:
                 continue
+            if "image/gif" in content_type:
+                continue
             converted_svg = None
             if 'image/svg+xml' in content_type:
                 image_format = 'svg'
@@ -70,6 +72,8 @@ class ImageDataExtractor:
                 'contains_transparency': self.has_transparency(image_file),
                 'wrapped_element': image.parent.name,
                 'semantic_context': self.find_semantic_parent(image),
+                'is_link': self.is_wrapped_in(image, 'a'),
+                'is_button': self.is_wrapped_in(image, 'button'),
                 'file_format': image_format
             })
             image_content = converted_svg if image_format == 'svg' else image_response.content
@@ -97,6 +101,14 @@ class ImageDataExtractor:
                 return parent.name
             parent = parent.parent
         return None
+
+    def is_wrapped_in(self, element, wrapper_tag):
+        parent = element.parent
+        while parent:
+            if parent.name == wrapper_tag:
+                return True
+            parent = parent.parent
+        return False
 
     def get_headline_above_image(self, img_element):
         headline = img_element.find_previous(['h1', 'h2', 'h3', 'h4', 'h5', 'h6'])

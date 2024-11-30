@@ -52,9 +52,9 @@ class Database:
             headline_above_image TEXT,
             wrapped_element VARCHAR(50),
             semantic_context VARCHAR(50),
+            is_link BOOLEAN,
+            is_button BOOLEAN,
             file_format VARCHAR(30),
-            frequency_on_website INT,
-            extracted_text TEXT,
             is_decorative BOOLEAN,
             date_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (page_id) REFERENCES page(id)
@@ -100,18 +100,13 @@ class Database:
         except mysql.connector.Error as err:
             print(f"Error: {err}")
 
-    def image_exists(self, img_hash):
-        query = "SELECT COUNT(*) FROM image WHERE hash = %s"
-        self.execute_query(query, img_hash)
-        result = self._connection.cursor.fetchone()
-        return result[0] > 0
-
     def insert_page(self, page_data):
         query = """
         INSERT INTO page (title, meta_description, language, top_headline, word_count, image_count, external_link_count, internal_link_count, url)
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
-        params = (page_data['title'], page_data['meta_description'], page_data['language'], page_data['top_headline'], page_data['word_count'],
+        params = (page_data['title'], page_data['meta_description'], page_data['language'], page_data['top_headline'],
+                  page_data['word_count'],
                   page_data['image_count'], page_data['external_link_count'],
                   page_data['internal_link_count'], page_data['url'])
         self.connect()
@@ -124,11 +119,13 @@ class Database:
 
     def insert_image(self, image_data):
         query = """
-        INSERT INTO image (page_id, hash, image_url, src, file_name, alt_text, image_title, image_caption, width, height, contains_transparency, headline_above_image, wrapped_element, semantic_context, file_format)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        INSERT INTO image (page_id, hash, image_url, src, file_name, alt_text, image_title, image_caption, width, height, contains_transparency, headline_above_image, wrapped_element, semantic_context, is_link, is_button, file_format)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
         params = (
             image_data['page_id'], image_data['hash'], image_data['image_url'], image_data['src'],
             image_data['file_name'], image_data['alt_text'], image_data['image_title'], image_data['image_caption'],
-            image_data['width'], image_data['height'], image_data['contains_transparency'], image_data['headline_above_image'], image_data['wrapped_element'], image_data['semantic_context'], image_data['file_format'])
+            image_data['width'], image_data['height'], image_data['contains_transparency'],
+            image_data['headline_above_image'], image_data['wrapped_element'], image_data['semantic_context'],
+            image_data['is_link'], image_data['is_button'], image_data['file_format'])
         self.execute_query(query, params)

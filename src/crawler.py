@@ -7,54 +7,61 @@ from src.image_data_extractor import ImageDataExtractor
 from src.page_data_extractor import PageDataExtractor
 import requests
 import src.helper as helper
+import random
 
 config = configparser.ConfigParser()
 config.read("../config.properties")
 
+NOT_ALLOWED_PAGES = ["impressum", "sitemap", "datenschutz", "category", "tag"]
+
 
 class Crawler:
-    def __init__(self):
+    def __init__(self, params):
         self.db = Database(host=config['database']['db.host'], username=config['database']['db.username'],
                            password=config['database']['db.password'], database=config['database']['database'],
                            port=config['database']['port'])
-    def __init__(self, params):
         self.visited_urls = set()
         self.to_visit = []
         self.params = params
 
-    def crawl(self, url, page_count=False):
-        sitemap_pages = self.get_sitemap_pages(url)
-        if sitemap_pages:
-            print("Crawling website through sitemap...")
-            for page in sitemap_pages:
-                if page_count and len(self.visited_urls) >= page_count:
-                    break
-                self.visit_url(page)
-        else:
-            print(f'No sitemap found for {url}. Crawling internal links...')
-            self.to_visit.append(url)
-            while self.to_visit and (not page_count or len(self.visited_urls) < int(page_count)):
-                next_url = self.to_visit.pop(0)
-                if next_url not in self.visited_urls:
-                    self.visit_url(next_url)
     def crawl(self, url):
         page_count = self.params.get('page_count', False)
+        # sitemap_pages = self.get_sitemap_pages(url)
+        # if sitemap_pages:
+        #     print("Crawling website through sitemap...")
+        #     for page in sitemap_pages:
+        #         if page_count and len(self.visited_urls) >= page_count:
+        #             break
+        #         self.visit_url(page)
+        # else:
+        #     print(f'No sitemap found for {url}. Crawling internal links...')
+
+        self.to_visit.append(url)
+        while self.to_visit and (not page_count or len(self.visited_urls) < int(page_count)):
+            next_index = random.randint(0, len(self.to_visit) - 1)
+            next_url = self.to_visit.pop(next_index)
+            if any(substring in next_url for substring in NOT_ALLOWED_PAGES):
+                continue
+            if next_url not in self.visited_urls:
+                self.visit_url(next_url)
 
     def visit_url(self, url):
-        if url in self.visited_urls:
+        normalized_url = helper.normalize_url(url)
+        if normalized_url in self.visited_urls:
             return
-        print(f"Visiting: {url}")
-        self.visited_urls.add(url)
+        print(f"Visiting: {normalized_url}")
+        self.visited_urls.add(normalized_url)
         try:
-            soup = self.fetch_url(url)
+            soup = self.fetch_url(normalized_url)
             if soup is None:
                 return
         except HTTPError as err:
-            print(f"Error: {err} for URL: {url}")
+            print(f"Error: {err} for URL: {normalized_url}")
             return
 
-        page_data = self.crawl_page(soup, url)
-        image_data = self.crawl_images(soup, url)
+        page_data = self.crawl_page(soup, normalized_url)
+        print(page_data)
+        image_data = self.crawl_images(soup, normalized_url)
         if image_data:
             page_id = self.db.insert_page(page_data)
             for image in image_data:
@@ -62,10 +69,11 @@ class Crawler:
                 self.db.insert_image(image)
             print("Data saved")
 
-        internal_links = helper.extract_internal_links(soup, url)
+        internal_links = helper.extract_internal_links(soup, normalized_url)
         for link in internal_links:
-            if link not in self.visited_urls and link not in self.to_visit:
-                self.to_visit.append(link)
+            normalized_link = helper.normalize_url(link)
+            if normalized_link not in self.visited_urls and normalized_link not in self.to_visit:
+                self.to_visit.append(normalized_link)
 
     def crawl_page(self, soup, url):
         page_data_extractor = PageDataExtractor(soup, url)
